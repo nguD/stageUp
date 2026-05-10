@@ -79,5 +79,20 @@ export function useStorage() {
     })
   }, [])
 
-  return { days, createTodayIfNeeded, addEntry, removeEntry }
+  const removeDay = useCallback((date: string) => {
+    setDays((prev) => persist(prev.filter((d) => d.date !== date)))
+  }, [])
+
+  const replaceAllDays = useCallback((next: Day[]) => {
+    setDays(persist(next))
+  }, [])
+
+  return {
+    days,
+    createTodayIfNeeded,
+    addEntry,
+    removeEntry,
+    removeDay,
+    replaceAllDays,
+  }
 }

@@ -3,12 +3,21 @@ import { DayView } from './components/DayView'
 import { RapportView } from './components/RapportView'
 import { Sidebar } from './components/Sidebar'
 import { useStorage } from './hooks/useStorage'
+import { downloadJournalBackup, validateDaysPayload } from './lib/backup'
+import { todayISO } from './lib/dates'
 import type { Entry } from './types'
 
 type Tab = 'journal' | 'rapport'
 
 function App() {
-  const { days, createTodayIfNeeded, addEntry, removeEntry } = useStorage()
+  const {
+    days,
+    createTodayIfNeeded,
+    addEntry,
+    removeEntry,
+    removeDay,
+    replaceAllDays,
+  } = useStorage()
   const [activeDate, setActiveDate] = useState<string | null>(null)
   const [tab, setTab] = useState<Tab>('journal')
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -41,6 +50,49 @@ function App() {
     removeEntry(effectiveDate, entryId)
   }
 
+  const onRemoveDay = (date: string) => {
+    if (
+      !window.confirm(
+        'Supprimer cette journée et toutes ses entrées ? Cette action est irréversible.',
+      )
+    ) {
+      return
+    }
+    removeDay(date)
+  }
+
+  const onExportBackup = () => {
+    const name = `journal-stage-${todayISO()}.json`
+    downloadJournalBackup(days, name)
+  }
+
+  const onImportBackup = (file: File) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      try {
+        const raw = JSON.parse(reader.result as string)
+        const imported = validateDaysPayload(raw)
+        if (!imported) {
+          window.alert(
+            'Fichier non reconnu. Attendu : tableau de journées ou objet { days: [...] }.',
+          )
+          return
+        }
+        if (
+          !window.confirm(
+            'Remplacer toutes les données du journal par ce fichier ? Les entrées actuelles seront perdues si vous n’avez pas exporté avant.',
+          )
+        ) {
+          return
+        }
+        replaceAllDays(imported)
+      } catch {
+        window.alert('Impossible de lire le fichier JSON.')
+      }
+    }
+    reader.readAsText(file)
+  }
+
   return (
     <div className="flex min-h-screen bg-cream text-ink">
       <Sidebar
@@ -48,6 +100,9 @@ function App() {
         activeDate={effectiveDate}
         onSelect={setActiveDate}
         onNewDay={onNewDay}
+        onRemoveDay={onRemoveDay}
+        onExportBackup={onExportBackup}
+        onImportBackup={onImportBackup}
         mobileOpen={sidebarOpen}
         onCloseMobile={() => setSidebarOpen(false)}
       />
