@@ -4,20 +4,25 @@ export default {
   theme: {
     extend: {
       colors: {
-        cream: '#F7F4EF',
-        ink: '#1C1A17',
-        accent: '#C17B4A',
-        morning: '#4A7C9E',
-        afternoon: '#7B6B9E',
+        /** Fond très clair légèrement bleu-violet */
+        cream: '#EEF2FF',
+        /** Texte principal — bleu nuit lisible */
+        ink: '#151B2E',
+        /** Actions / onglet actif — indigo vif */
+        accent: '#6366F1',
+        /** Bloc matin — cyan énergique */
+        morning: '#0891B2',
+        /** Bloc après-midi — magenta / violet */
+        afternoon: '#A855F7',
       },
       fontFamily: {
-        display: ['"Playfair Display"', 'Georgia', 'serif'],
-        sans: ['"DM Sans"', 'system-ui', 'sans-serif'],
+        display: ['Outfit', 'system-ui', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
-        card: '0 1px 2px rgba(28, 26, 23, 0.06), 0 4px 12px rgba(28, 26, 23, 0.04)',
+        card: '0 1px 2px rgba(21, 27, 46, 0.06), 0 4px 14px rgba(99, 102, 241, 0.08)',
         'card-hover':
-          '0 4px 12px rgba(28, 26, 23, 0.08), 0 8px 24px rgba(28, 26, 23, 0.06)',
+          '0 4px 14px rgba(21, 27, 46, 0.08), 0 10px 28px rgba(99, 102, 241, 0.12)',
       },
     },
   },

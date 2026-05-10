@@ -1,13 +1,15 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { DayView } from './components/DayView'
 import { RapportView } from './components/RapportView'
 import { Sidebar } from './components/Sidebar'
+import { TaskSuggestionsView } from './components/TaskSuggestionsView'
 import { useStorage } from './hooks/useStorage'
 import { downloadJournalBackup, validateDaysPayload } from './lib/backup'
 import { todayISO } from './lib/dates'
 import type { Entry } from './types'
 
-type Tab = 'journal' | 'rapport'
+type Tab = 'journal' | 'rapport' | 'propositions'
 
 function App() {
   const {
@@ -110,18 +112,26 @@ function App() {
       <div className="flex min-h-screen flex-1 flex-col md:pl-0">
         <header className="sticky top-0 z-10 border-b border-ink/10 bg-cream/90 px-4 py-3 backdrop-blur-md md:px-8">
           <div className="mx-auto flex max-w-4xl items-center justify-between gap-4">
-            <button
-              type="button"
-              className="rounded-lg border border-ink/15 bg-white/80 px-3 py-2 text-sm md:hidden"
-              onClick={() => setSidebarOpen(true)}
-            >
-              Menu
-            </button>
-            <nav className="flex flex-1 justify-center gap-1 sm:justify-end">
+            <div className="flex shrink-0 items-center gap-2">
+              <button
+                type="button"
+                className="rounded-lg border border-ink/15 bg-white/80 px-3 py-2 text-sm md:hidden"
+                onClick={() => setSidebarOpen(true)}
+              >
+                Menu
+              </button>
+              <Link
+                to="/"
+                className="rounded-lg px-2 py-1.5 text-xs font-medium text-ink/50 transition hover:bg-white/80 hover:text-accent md:text-sm"
+              >
+                ← Accueil
+              </Link>
+            </div>
+            <nav className="flex flex-1 flex-wrap justify-center gap-1 sm:justify-end">
               <button
                 type="button"
                 onClick={() => setTab('journal')}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                className={`rounded-full px-3 py-2 text-sm font-medium transition sm:px-4 ${
                   tab === 'journal'
                     ? 'bg-accent text-white shadow-sm'
                     : 'text-ink/65 hover:bg-white/70'
@@ -132,7 +142,7 @@ function App() {
               <button
                 type="button"
                 onClick={() => setTab('rapport')}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                className={`rounded-full px-3 py-2 text-sm font-medium transition sm:px-4 ${
                   tab === 'rapport'
                     ? 'bg-accent text-white shadow-sm'
                     : 'text-ink/65 hover:bg-white/70'
@@ -140,11 +150,26 @@ function App() {
               >
                 Rapport IA
               </button>
+              <button
+                type="button"
+                onClick={() => setTab('propositions')}
+                className={`rounded-full px-3 py-2 text-sm font-medium transition sm:px-4 ${
+                  tab === 'propositions'
+                    ? 'bg-accent text-white shadow-sm'
+                    : 'text-ink/65 hover:bg-white/70'
+                }`}
+              >
+                Propositions
+              </button>
             </nav>
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 md:px-8">
+        <main
+          className={`mx-auto w-full max-w-4xl flex-1 px-4 py-8 md:px-8 ${
+            tab === 'journal' ? 'pb-28 md:pb-8' : ''
+          }`}
+        >
           {tab === 'journal' && (
             <>
               {!activeDay ? (
@@ -152,7 +177,10 @@ function App() {
                   <p className="font-display text-lg text-ink/70">
                     Aucune journée pour le moment.
                   </p>
-                  <p className="mt-2 text-sm text-ink/45">
+                  <p className="mt-2 text-sm text-ink/45 md:hidden">
+                    Appuyez sur « Nouvelle journée » en bas de l’écran.
+                  </p>
+                  <p className="mt-2 hidden text-sm text-ink/45 md:block">
                     Utilisez « Nouvelle journée » dans le menu pour commencer.
                   </p>
                 </div>
@@ -166,7 +194,22 @@ function App() {
             </>
           )}
           {tab === 'rapport' && <RapportView days={days} />}
+          {tab === 'propositions' && <TaskSuggestionsView />}
         </main>
+
+        {tab === 'journal' && (
+          <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-ink/10 bg-cream/95 px-4 py-3 backdrop-blur-md md:hidden">
+            <div className="mx-auto flex max-w-4xl justify-stretch">
+              <button
+                type="button"
+                onClick={onNewDay}
+                className="w-full rounded-xl border border-accent/40 bg-white px-4 py-3 text-sm font-medium text-accent shadow-sm transition hover:border-accent hover:bg-accent/5"
+              >
+                Nouvelle journée
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
