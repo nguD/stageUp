@@ -62,7 +62,8 @@ Exemple (à personnaliser dans `.env`) :
 L’app est un **Web Service Node** (plus un simple site statique) avec disque persistant pour SQLite.
 
 1. Déployer via [`render.yaml`](render.yaml) (*Blueprint*) ou créer un **Web Service**.
-2. **Build** : `npm ci && npm run build`
+2. **Build** : `npm ci --include=dev && npm run build`  
+   *(Avec `NODE_ENV=production`, `npm ci` seul n’installe pas TypeScript/Vite — d’où le `--include=dev`.)*
 3. **Start** : `node server/dist/index.js`
 4. **Disque** : monter `/data`, variable `DATABASE_PATH=/data/journal.db`
 5. Renseigner dans **Environment** : `JWT_SECRET`, les 3 paires `STAGIAIREn_USER/PASS/NAME`, optionnellement `VITE_ANTHROPIC_API_KEY` (au build).
