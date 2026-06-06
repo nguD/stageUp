@@ -1,22 +1,10 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { fetchJournal, saveJournal } from '../lib/api'
 import { todayISO } from '../lib/dates'
 import type { Day, Entry } from '../types'
 
-const STORAGE_KEY = 'journal-stage-days'
-
 function sortDays(days: Day[]): Day[] {
   return [...days].sort((a, b) => b.date.localeCompare(a.date))
-}
-
-function loadInitial(): Day[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return []
-    const parsed = JSON.parse(raw) as Day[]
-    return sortDays(parsed)
-  } catch {
-    return []
-  }
 }
 
 function nextEntryId(days: Day[]): number {
@@ -29,66 +17,109 @@ function nextEntryId(days: Day[]): number {
   return max + 1
 }
 
-function persist(next: Day[]): Day[] {
-  const sorted = sortDays(next)
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(sorted))
-  return sorted
-}
-
 export function useStorage() {
-  const [days, setDays] = useState<Day[]>(loadInitial)
+  const [days, setDays] = useState<Day[]>([])
+  const [loading, setLoading] = useState(true)
+  const [syncError, setSyncError] = useState<string | null>(null)
+
+  useEffect(() => {
+    setLoading(true)
+    setSyncError(null)
+    fetchJournal()
+      .then((data) => setDays(sortDays(data)))
+      .catch((e) => {
+        setSyncError(e instanceof Error ? e.message : 'Impossible de charger le journal')
+        setDays([])
+      })
+      .finally(() => setLoading(false))
+  }, [])
+
+  const persist = useCallback(async (next: Day[]) => {
+    const sorted = sortDays(next)
+    setDays(sorted)
+    try {
+      await saveJournal(sorted)
+      setSyncError(null)
+    } catch (e) {
+      setSyncError(e instanceof Error ? e.message : 'Sauvegarde impossible')
+      throw e
+    }
+    return sorted
+  }, [])
 
   const createTodayIfNeeded = useCallback((): string => {
     const today = todayISO()
     setDays((prev) => {
       if (prev.some((d) => d.date === today)) return sortDays(prev)
-      return persist([...prev, { date: today, entries: [] }])
+      const next = sortDays([...prev, { date: today, entries: [] }])
+      void persist(next)
+      return next
     })
     return today
-  }, [])
+  }, [persist])
 
-  const addEntry = useCallback((date: string, entryData: Omit<Entry, 'id' | 'createdAt'>) => {
-    setDays((prev) => {
-      const id = nextEntryId(prev)
-      const entry: Entry = {
-        ...entryData,
-        id,
-        createdAt: new Date().toISOString(),
-      }
-      const idx = prev.findIndex((d) => d.date === date)
-      let next: Day[]
-      if (idx === -1) {
-        next = [...prev, { date, entries: [entry] }]
-      } else {
-        next = prev.map((d, i) =>
-          i === idx ? { ...d, entries: [...d.entries, entry] } : d,
+  const addEntry = useCallback(
+    (date: string, entryData: Omit<Entry, 'id' | 'createdAt'>) => {
+      setDays((prev) => {
+        const id = nextEntryId(prev)
+        const entry: Entry = {
+          ...entryData,
+          id,
+          createdAt: new Date().toISOString(),
+        }
+        const idx = prev.findIndex((d) => d.date === date)
+        let next: Day[]
+        if (idx === -1) {
+          next = [...prev, { date, entries: [entry] }]
+        } else {
+          next = prev.map((d, i) =>
+            i === idx ? { ...d, entries: [...d.entries, entry] } : d,
+          )
+        }
+        void persist(next)
+        return sortDays(next)
+      })
+    },
+    [persist],
+  )
+
+  const removeEntry = useCallback(
+    (date: string, entryId: number) => {
+      setDays((prev) => {
+        const next = prev.map((d) =>
+          d.date === date
+            ? { ...d, entries: d.entries.filter((e) => e.id !== entryId) }
+            : d,
         )
-      }
-      return persist(next)
-    })
-  }, [])
+        void persist(next)
+        return sortDays(next)
+      })
+    },
+    [persist],
+  )
 
-  const removeEntry = useCallback((date: string, entryId: number) => {
-    setDays((prev) => {
-      const next = prev.map((d) =>
-        d.date === date
-          ? { ...d, entries: d.entries.filter((e) => e.id !== entryId) }
-          : d,
-      )
-      return persist(next)
-    })
-  }, [])
+  const removeDay = useCallback(
+    (date: string) => {
+      setDays((prev) => {
+        const next = prev.filter((d) => d.date !== date)
+        void persist(next)
+        return sortDays(next)
+      })
+    },
+    [persist],
+  )
 
-  const removeDay = useCallback((date: string) => {
-    setDays((prev) => persist(prev.filter((d) => d.date !== date)))
-  }, [])
-
-  const replaceAllDays = useCallback((next: Day[]) => {
-    setDays(persist(next))
-  }, [])
+  const replaceAllDays = useCallback(
+    (next: Day[]) => {
+      void persist(next)
+    },
+    [persist],
+  )
 
   return {
     days,
+    loading,
+    syncError,
     createTodayIfNeeded,
     addEntry,
     removeEntry,

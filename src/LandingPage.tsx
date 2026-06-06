@@ -73,7 +73,7 @@ export function LandingPage() {
               GitHub
             </a>
             <Link
-              to="/app"
+              to="/app/login"
               className="rounded-full bg-accent px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:opacity-95"
             >
               Ouvrir l’app
@@ -98,7 +98,7 @@ export function LandingPage() {
           </p>
           <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
-              to="/app"
+              to="/app/login"
               className="w-full rounded-xl bg-ink px-8 py-3.5 text-center text-sm font-semibold text-cream shadow-card transition hover:opacity-95 sm:w-auto"
             >
               Commencer maintenant
@@ -168,11 +168,11 @@ export function LandingPage() {
               Prêt à documenter ton stage ?
             </h2>
             <p className="mt-3 text-sm text-ink/60">
-              Aucun compte requis. Tes données sont stockées dans ton navigateur ; pense à exporter une sauvegarde de
-              temps en temps.
+              Connecte-toi avec ton identifiant stagiaire. Ton journal est enregistré sur le serveur ; tu peux aussi
+              exporter une sauvegarde JSON depuis l’app.
             </p>
             <Link
-              to="/app"
+              to="/app/login"
               className="mt-8 inline-flex rounded-xl bg-accent px-8 py-3.5 text-sm font-semibold text-white shadow-card transition hover:opacity-95"
             >
               Ouvrir Journal de Stage
@@ -188,7 +188,7 @@ export function LandingPage() {
             <a href={REPO} target="_blank" rel="noreferrer" className="hover:text-accent">
               Code sur GitHub
             </a>
-            <Link to="/app" className="hover:text-accent">
+            <Link to="/app/login" className="hover:text-accent">
               Application
             </Link>
           </div>

@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { DayView } from './components/DayView'
 import { RapportView } from './components/RapportView'
 import { Sidebar } from './components/Sidebar'
 import { TaskSuggestionsView } from './components/TaskSuggestionsView'
+import { useAuth } from './context/AuthContext'
 import { useStorage } from './hooks/useStorage'
 import { downloadJournalBackup, validateDaysPayload } from './lib/backup'
 import { todayISO } from './lib/dates'
@@ -12,8 +13,12 @@ import type { Entry } from './types'
 type Tab = 'journal' | 'rapport' | 'propositions'
 
 function App() {
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
   const {
     days,
+    loading,
+    syncError,
     createTodayIfNeeded,
     addEntry,
     removeEntry,
@@ -95,6 +100,19 @@ function App() {
     reader.readAsText(file)
   }
 
+  const onLogout = async () => {
+    await logout()
+    navigate('/app/login', { replace: true })
+  }
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-cream text-ink">
+        <p className="text-sm text-ink/55">Chargement de ton journal…</p>
+      </div>
+    )
+  }
+
   return (
     <div className="flex min-h-screen bg-cream text-ink">
       <Sidebar
@@ -127,7 +145,7 @@ function App() {
                 ← Accueil
               </Link>
             </div>
-            <nav className="flex flex-1 flex-wrap justify-center gap-1 sm:justify-end">
+            <nav className="flex flex-1 flex-wrap items-center justify-center gap-1 sm:justify-end">
               <button
                 type="button"
                 onClick={() => setTab('journal')}
@@ -161,6 +179,20 @@ function App() {
               >
                 Propositions
               </button>
+              {user && (
+                <div className="ml-1 flex items-center gap-2 border-l border-ink/10 pl-2 sm:ml-2 sm:pl-3">
+                  <span className="hidden max-w-[8rem] truncate text-xs text-ink/50 sm:inline">
+                    {user.displayName}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => void onLogout()}
+                    className="rounded-full px-3 py-2 text-xs font-medium text-ink/55 hover:bg-white/70 sm:text-sm"
+                  >
+                    Déconnexion
+                  </button>
+                </div>
+              )}
             </nav>
           </div>
         </header>
@@ -170,6 +202,11 @@ function App() {
             tab === 'journal' ? 'pb-28 md:pb-8' : ''
           }`}
         >
+          {syncError && (
+            <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+              {syncError}
+            </p>
+          )}
           {tab === 'journal' && (
             <>
               {!activeDay ? (

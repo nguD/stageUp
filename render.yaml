@@ -1,0 +1,40 @@
+# Blueprint Render — Web Service (API + frontend) + disque persistant SQLite
+# Doc : https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: journal-stage
+    runtime: node
+    buildCommand: npm ci && npm run build
+    startCommand: node server/dist/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_PATH
+        value: /data/journal.db
+      - key: STAGIAIRE1_USER
+        sync: false
+      - key: STAGIAIRE1_PASS
+        sync: false
+      - key: STAGIAIRE1_NAME
+        sync: false
+      - key: STAGIAIRE2_USER
+        sync: false
+      - key: STAGIAIRE2_PASS
+        sync: false
+      - key: STAGIAIRE2_NAME
+        sync: false
+      - key: STAGIAIRE3_USER
+        sync: false
+      - key: STAGIAIRE3_PASS
+        sync: false
+      - key: STAGIAIRE3_NAME
+        sync: false
+      - key: VITE_ANTHROPIC_API_KEY
+        sync: false
+    disk:
+      name: journal-data
+      mountPath: /data
+      sizeGB: 1
